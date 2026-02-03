@@ -1,0 +1,26 @@
+# Binaries
+/sshgate
+/*.exe
+/*.out
+
+# Go build artifacts
+*.test
+*.prof
+coverage.out
+
+# Devbox
+.devbox/
+.jj/
+
+# Logs
+*.log
+
+# Editor/OS
+.idea/
+.vscode/
+.env
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~

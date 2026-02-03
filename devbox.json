@@ -1,0 +1,24 @@
+{
+  "$schema":  "https://raw.githubusercontent.com/jetify-com/devbox/0.16.0/.schema/devbox.schema.json",
+  "packages": ["go@latest"],
+  "shell": {
+    "init_hook": [
+      "echo 'Welcome to devbox!' > /dev/null"
+    ],
+    "scripts": {
+      "fmt": [
+        "gofmt -w ."
+      ],
+      "test": [
+        "go test ./..."
+      ],
+      "build": [
+        "go build -o sshgate"
+      ],
+      "check": [
+        "gofmt -w .",
+        "go test ./..."
+      ]
+    }
+  }
+}
