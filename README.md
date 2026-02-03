@@ -23,6 +23,19 @@ devbox init
 devbox add go
 ```
 
+## Install (Homebrew)
+
+```sh
+brew install ohare93/tap/sshgate
+```
+
+## Install (Scoop)
+
+```powershell
+scoop bucket add ohare93 https://github.com/ohare93/scoop
+scoop install sshgate
+```
+
 ## Build
 
 ```sh

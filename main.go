@@ -26,6 +26,7 @@ const (
 )
 
 var sshBinary = "ssh"
+var version = "dev"
 
 type sessionState struct {
 	Host            string `json:"host"`
@@ -55,6 +56,8 @@ func main() {
 		runClose(os.Args[2:])
 	case "status":
 		runStatus(os.Args[2:])
+	case "version", "--version", "-v":
+		fmt.Fprintln(os.Stdout, version)
 	case "help", "-h", "--help":
 		usage(os.Stdout)
 	default:
@@ -73,6 +76,7 @@ func usage(w *os.File) {
 	fmt.Fprintf(w, "  %s run -- \"COMMAND STRING\"\n", appName)
 	fmt.Fprintf(w, "  %s close\n", appName)
 	fmt.Fprintf(w, "  %s status\n", appName)
+	fmt.Fprintf(w, "  %s version\n", appName)
 }
 
 func runInit(args []string) {
