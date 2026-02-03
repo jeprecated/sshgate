@@ -457,3 +457,95 @@ func TestRunRemoteShellReturnsErrorOnFailure(t *testing.T) {
 		t.Fatalf("expected error from failing ssh")
 	}
 }
+
+func TestParseOpenArgsSimple(t *testing.T) {
+	reveal, opts, target, err := parseOpenArgs([]string{"user@host"})
+	if err != nil {
+		t.Fatalf("parseOpenArgs error: %v", err)
+	}
+	if reveal {
+		t.Fatalf("unexpected reveal flag")
+	}
+	if len(opts) != 0 {
+		t.Fatalf("unexpected opts: %v", opts)
+	}
+	if target != "user@host" {
+		t.Fatalf("unexpected target: %s", target)
+	}
+}
+
+func TestParseOpenArgsWithReveal(t *testing.T) {
+	reveal, opts, target, err := parseOpenArgs([]string{"--reveal-host", "user@host"})
+	if err != nil {
+		t.Fatalf("parseOpenArgs error: %v", err)
+	}
+	if !reveal {
+		t.Fatalf("expected reveal flag")
+	}
+	if len(opts) != 0 {
+		t.Fatalf("unexpected opts: %v", opts)
+	}
+	if target != "user@host" {
+		t.Fatalf("unexpected target: %s", target)
+	}
+}
+
+func TestParseOpenArgsWithOptions(t *testing.T) {
+	reveal, opts, target, err := parseOpenArgs([]string{"-i", "~/.ssh/key", "-o", "IdentitiesOnly=yes", "user@host"})
+	if err != nil {
+		t.Fatalf("parseOpenArgs error: %v", err)
+	}
+	if reveal {
+		t.Fatalf("unexpected reveal flag")
+	}
+	if target != "user@host" {
+		t.Fatalf("unexpected target: %s", target)
+	}
+	if strings.Join(opts, " ") != "-i ~/.ssh/key -o IdentitiesOnly=yes" {
+		t.Fatalf("unexpected opts: %v", opts)
+	}
+}
+
+func TestParseOpenArgsWithRevealAndOptions(t *testing.T) {
+	reveal, opts, target, err := parseOpenArgs([]string{"--reveal-host", "-p", "2222", "user@host"})
+	if err != nil {
+		t.Fatalf("parseOpenArgs error: %v", err)
+	}
+	if !reveal {
+		t.Fatalf("expected reveal flag")
+	}
+	if target != "user@host" {
+		t.Fatalf("unexpected target: %s", target)
+	}
+	if strings.Join(opts, " ") != "-p 2222" {
+		t.Fatalf("unexpected opts: %v", opts)
+	}
+}
+
+func TestParseOpenArgsRejectsMultipleTargets(t *testing.T) {
+	if _, _, _, err := parseOpenArgs([]string{"user@host", "extra"}); err == nil {
+		t.Fatalf("expected error for multiple args")
+	}
+}
+
+func TestParseOpenArgsRejectsNonOptionBeforeTarget(t *testing.T) {
+	if _, _, _, err := parseOpenArgs([]string{"not-an-opt", "user@host"}); err == nil {
+		t.Fatalf("expected error for non-option before target")
+	}
+}
+
+func TestParseOpenArgsWithSeparatorAndOptions(t *testing.T) {
+	reveal, opts, target, err := parseOpenArgs([]string{"--", "-i", "~/.ssh/key", "-o", "IdentitiesOnly=yes", "user@host"})
+	if err != nil {
+		t.Fatalf("parseOpenArgs error: %v", err)
+	}
+	if reveal {
+		t.Fatalf("unexpected reveal flag")
+	}
+	if target != "user@host" {
+		t.Fatalf("unexpected target: %s", target)
+	}
+	if strings.Join(opts, " ") != "-i ~/.ssh/key -o IdentitiesOnly=yes" {
+		t.Fatalf("unexpected opts: %v", opts)
+	}
+}

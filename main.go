@@ -71,7 +71,7 @@ func usage(w *os.File) {
 	fmt.Fprintf(w, "%s - user-gated SSH proxy\n\n", appName)
 	fmt.Fprintf(w, "Usage:\n")
 	fmt.Fprintf(w, "  %s init\n", appName)
-	fmt.Fprintf(w, "  %s open [--reveal-host] user@host\n", appName)
+	fmt.Fprintf(w, "  %s open [--reveal-host] [SSH_OPTS...] user@host\n", appName)
 	fmt.Fprintf(w, "  %s run COMMAND [ARG...]\n", appName)
 	fmt.Fprintf(w, "  %s run -- \"COMMAND STRING\"\n", appName)
 	fmt.Fprintf(w, "  %s close\n", appName)
@@ -133,22 +133,15 @@ func runInit(args []string) {
 }
 
 func runOpen(args []string) {
-	allowRevealHost := false
-	remaining := args
-	if len(remaining) > 0 && remaining[0] == "--reveal-host" {
-		allowRevealHost = true
-		remaining = remaining[1:]
-	}
-	if len(remaining) != 1 {
-		fmt.Fprintf(os.Stderr, "%s: open expects exactly one target like user@host\n", appName)
+	allowRevealHost, sshOpts, target, err := parseOpenArgs(args)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s: %v\n", appName, err)
 		os.Exit(2)
 	}
 
 	if err := verifyAccess(); err != nil {
 		fatal(err)
 	}
-
-	target := remaining[0]
 	runtimeDir, statePath, socketPath, logPath, err := sessionPaths()
 	if err != nil {
 		fatal(err)
@@ -169,7 +162,10 @@ func runOpen(args []string) {
 	}
 
 	_ = syscall.Umask(0o077)
-	cmd := sshCommand("-M", "-S", socketPath, "-N", target)
+	sshArgs := []string{"-M", "-S", socketPath, "-N"}
+	sshArgs = append(sshArgs, sshOpts...)
+	sshArgs = append(sshArgs, target)
+	cmd := sshCommand(sshArgs...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -577,6 +573,49 @@ func runRemoteShell(state sessionState, commandLine string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
+}
+
+func parseOpenArgs(args []string) (bool, []string, string, error) {
+	allowRevealHost := false
+	sshOpts := make([]string, 0)
+	remaining := make([]string, 0, len(args))
+	for _, arg := range args {
+		if arg == "--reveal-host" {
+			allowRevealHost = true
+			continue
+		}
+		remaining = append(remaining, arg)
+	}
+
+	if len(remaining) == 0 {
+		return false, nil, "", errors.New("open expects a target like user@host")
+	}
+
+	for i, arg := range remaining {
+		if arg == "--" {
+			remaining = append(remaining[:i], remaining[i+1:]...)
+			break
+		}
+	}
+
+	if len(remaining) < 1 {
+		return false, nil, "", errors.New("open expects a target like user@host")
+	}
+	if len(remaining) == 1 {
+		return allowRevealHost, nil, remaining[0], nil
+	}
+
+	sshOpts = remaining[:len(remaining)-1]
+	target := remaining[len(remaining)-1]
+	for i, opt := range sshOpts {
+		if strings.HasPrefix(opt, "-") {
+			continue
+		}
+		if i == 0 || !strings.HasPrefix(sshOpts[i-1], "-") {
+			return false, nil, "", errors.New("open expects SSH options before the target (use -- to disambiguate)")
+		}
+	}
+	return allowRevealHost, sshOpts, target, nil
 }
 
 func exitWithCode(err error) {

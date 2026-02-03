@@ -51,6 +51,18 @@ Human terminal:
 ./sshgate open user@host
 ```
 
+To pass SSH options (keys, identities, ports), use `--`:
+
+```sh
+./sshgate open -- -i ~/.ssh/key -o IdentitiesOnly=yes user@host
+```
+
+You can also pass SSH options directly before the target:
+
+```sh
+./sshgate open -i ~/.ssh/key -o IdentitiesOnly=yes user@host
+```
+
 Agent terminal:
 
 ```sh
