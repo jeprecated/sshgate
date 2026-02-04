@@ -458,6 +458,86 @@ func TestRunRemoteShellReturnsErrorOnFailure(t *testing.T) {
 	}
 }
 
+func TestShellEscape(t *testing.T) {
+	tests := []struct {
+		input  string
+		expect string
+	}{
+		{input: "", expect: "''"},
+		{input: "plain", expect: "'plain'"},
+		{input: "a b", expect: "'a b'"},
+		{input: "a'b", expect: `'a'\''b'`},
+		{input: "x'y\"z", expect: `'x'\''y"z'`},
+	}
+
+	for _, test := range tests {
+		if got := shellEscape(test.input); got != test.expect {
+			t.Fatalf("shellEscape(%q) = %q, want %q", test.input, got, test.expect)
+		}
+	}
+}
+
+func TestShellJoin(t *testing.T) {
+	args := []string{"echo", "a b"}
+	got := shellJoin(args)
+	expect := "'echo' 'a b'"
+	if got != expect {
+		t.Fatalf("shellJoin(%v) = %q, want %q", args, got, expect)
+	}
+}
+
+func TestRunRemoteCommandEscapesArgs(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("shell script not available on Windows")
+	}
+	fakeDir := t.TempDir()
+	sshPath := filepath.Join(fakeDir, "ssh")
+	script := "#!/bin/sh\n" +
+		"printf '%s\\n' \"$@\"\n"
+	if err := os.WriteFile(sshPath, []byte(script), 0o700); err != nil {
+		t.Fatalf("write fake ssh: %v", err)
+	}
+
+	oldSSH := sshBinary
+	sshBinary = sshPath
+	defer func() { sshBinary = oldSSH }()
+
+	readPipe, writePipe, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("pipe: %v", err)
+	}
+	oldStdout := os.Stdout
+	os.Stdout = writePipe
+	defer func() {
+		os.Stdout = oldStdout
+		_ = writePipe.Close()
+		_ = readPipe.Close()
+	}()
+
+	state := sessionState{Host: "user@host", SocketPath: "/tmp/socket", LogPath: "/tmp/log"}
+	if err := runRemoteCommand(state, []string{"echo", "a b"}); err != nil {
+		t.Fatalf("runRemoteCommand error: %v", err)
+	}
+
+	_ = writePipe.Close()
+	data, err := io.ReadAll(readPipe)
+	if err != nil {
+		t.Fatalf("read output: %v", err)
+	}
+
+	output := strings.TrimSuffix(string(data), "\n")
+	lines := strings.Split(output, "\n")
+	if len(lines) != 5 {
+		t.Fatalf("expected 5 ssh args, got %d: %q", len(lines), lines)
+	}
+	if lines[0] != "-S" || lines[1] != "/tmp/socket" || lines[2] != "user@host" || lines[3] != "--" {
+		t.Fatalf("unexpected ssh args: %q", lines[:4])
+	}
+	if lines[4] != "'echo' 'a b'" {
+		t.Fatalf("unexpected command line: %q", lines[4])
+	}
+}
+
 func TestParseOpenArgsSimple(t *testing.T) {
 	reveal, opts, target, err := parseOpenArgs([]string{"user@host"})
 	if err != nil {

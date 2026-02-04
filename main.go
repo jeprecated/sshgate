@@ -229,7 +229,11 @@ func runRun(args []string) {
 			fmt.Fprintf(os.Stderr, "%s: run -- expects a command string\n", appName)
 			os.Exit(2)
 		}
-		commandLine = strings.Join(args[1:], " ")
+		if len(args) == 2 {
+			commandLine = args[1]
+		} else {
+			commandLine = shellJoin(args[1:])
+		}
 	}
 
 	_, statePath, _, _, err := sessionPaths()
@@ -516,8 +520,8 @@ func sshCommand(args ...string) *exec.Cmd {
 }
 
 func runRemoteCommand(state sessionState, args []string) error {
-	sshArgs := []string{"-S", state.SocketPath, state.Host, "--"}
-	sshArgs = append(sshArgs, args...)
+	commandLine := shellJoin(args)
+	sshArgs := []string{"-S", state.SocketPath, state.Host, "--", commandLine}
 	cmd := sshCommand(sshArgs...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -573,6 +577,21 @@ func runRemoteShell(state sessionState, commandLine string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
+}
+
+func shellJoin(args []string) string {
+	escaped := make([]string, 0, len(args))
+	for _, arg := range args {
+		escaped = append(escaped, shellEscape(arg))
+	}
+	return strings.Join(escaped, " ")
+}
+
+func shellEscape(arg string) string {
+	if arg == "" {
+		return "''"
+	}
+	return "'" + strings.ReplaceAll(arg, "'", "'\\''") + "'"
 }
 
 func parseOpenArgs(args []string) (bool, []string, string, error) {
