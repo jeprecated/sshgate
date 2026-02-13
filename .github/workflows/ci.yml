@@ -28,12 +28,21 @@ jobs:
           cache: true
           cache-dependency-path: go.sum
 
+      - name: Vet
+        run: go vet ./...
+
       - name: Run tests
         run: go test -v ./...
 
       - name: Run tests with race detection
         if: matrix.os == 'ubuntu-latest'
         run: go test -v -race ./...
+
+      - name: Check go.mod tidiness
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          go mod tidy
+          git diff --exit-code go.mod go.sum
 
   build:
     name: Build (${{ matrix.os }})
@@ -63,3 +72,19 @@ jobs:
       - name: Verify binary runs (Windows)
         if: matrix.os == 'windows-latest'
         run: .\sshgate.exe version
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.5'
+          cache: true
+          cache-dependency-path: go.sum
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest

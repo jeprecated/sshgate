@@ -40,6 +40,7 @@ type accessState struct {
 }
 
 func main() {
+	_ = syscall.Umask(0o077)
 	if len(os.Args) < 2 {
 		usage(os.Stderr)
 		os.Exit(2)
@@ -161,7 +162,6 @@ func runOpen(args []string) {
 		_ = cleanupSession(existing, statePath)
 	}
 
-	_ = syscall.Umask(0o077)
 	sshArgs := []string{"-M", "-S", socketPath, "-N"}
 	sshArgs = append(sshArgs, sshOpts...)
 	sshArgs = append(sshArgs, target)
@@ -205,8 +205,9 @@ func runOpen(args []string) {
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
 	go func() {
-		sig := <-signals
-		_ = cmd.Process.Signal(sig)
+		for sig := range signals {
+			_ = cmd.Process.Signal(sig)
+		}
 	}()
 
 	err = cmd.Wait()
@@ -360,18 +361,26 @@ func accessPaths() (string, string, error) {
 	return accessDir, accessPath, nil
 }
 
-func ensureRuntimeDir(dir string) error {
+func ensureSecureDir(dir string) error {
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return err
+	}
+	info, err := os.Lstat(dir)
+	if err != nil {
+		return err
+	}
+	if info.Mode()&os.ModeSymlink != 0 {
+		return fmt.Errorf("refusing to use symlink as directory: %s", dir)
 	}
 	return os.Chmod(dir, 0o700)
 }
 
+func ensureRuntimeDir(dir string) error {
+	return ensureSecureDir(dir)
+}
+
 func ensureAccessDir(dir string) error {
-	if err := os.MkdirAll(dir, 0o700); err != nil {
-		return err
-	}
-	return os.Chmod(dir, 0o700)
+	return ensureSecureDir(dir)
 }
 
 func loadSession(path string) (sessionState, error) {
@@ -404,18 +413,45 @@ func loadAccess(path string) (accessState, error) {
 	return state, nil
 }
 
+func atomicWriteFile(path string, data []byte, perm os.FileMode) error {
+	dir := filepath.Dir(path)
+	base := filepath.Base(path)
+	tmp, err := os.CreateTemp(dir, base+".tmp.*")
+	if err != nil {
+		return err
+	}
+	success := false
+	defer func() {
+		if !success {
+			_ = tmp.Close()
+			_ = os.Remove(tmp.Name())
+		}
+	}()
+	if _, err := tmp.Write(data); err != nil {
+		return err
+	}
+	if err := tmp.Sync(); err != nil {
+		return err
+	}
+	if err := tmp.Chmod(perm); err != nil {
+		return err
+	}
+	if err := tmp.Close(); err != nil {
+		return err
+	}
+	if err := os.Rename(tmp.Name(), path); err != nil {
+		return err
+	}
+	success = true
+	return nil
+}
+
 func writeSession(path string, state sessionState) error {
 	data, err := json.MarshalIndent(state, "", "  ")
 	if err != nil {
 		return err
 	}
-	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-	_, err = file.Write(data)
-	return err
+	return atomicWriteFile(path, data, 0o600)
 }
 
 func writeAccess(path string, state accessState) error {
@@ -423,13 +459,7 @@ func writeAccess(path string, state accessState) error {
 	if err != nil {
 		return err
 	}
-	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-	_, err = file.Write(data)
-	return err
+	return atomicWriteFile(path, data, 0o600)
 }
 
 func sessionActive(state sessionState) (bool, error) {

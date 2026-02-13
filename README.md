@@ -82,12 +82,15 @@ Agents are only allowed to use:
 
 - `sshgate status`
 - `sshgate run COMMAND [ARG...]`
+- `sshgate close`
 
-For shell operators like `&&`, use a quoted command string:
+For shell operators like `&&`, use `--` followed by a quoted command string:
 
 ```sh
-sshgate run "ls && pwd"
+sshgate run -- "ls && pwd"
 ```
+
+> **Warning:** Shell mode (`run -- "..."`) passes the command to `sh -c` on the remote host. Shell metacharacters are interpreted. Prefer argument mode (`run COMMAND ARG...`) unless you need shell features like pipes or redirections. Argument mode escapes each argument individually, reducing injection risk.
 
 ## Security notes
 
@@ -95,6 +98,17 @@ sshgate run "ls && pwd"
 - The access password hash is stored in `~/.sshgate/access` with 0600 perms.
 - `open` runs in the foreground (no daemonization) and cleanly exits on close.
 - Exit codes from remote commands are propagated to the caller.
+
+### SSH option risks
+
+Certain SSH options passed to `open` can undermine sshgate's security model:
+
+- `-o ProxyCommand=...` or `-o LocalCommand=...` execute arbitrary local commands.
+- `-L`, `-R`, `-D` create port forwards that persist for the session.
+- `-W` establishes a raw TCP tunnel.
+- `-o PermitLocalCommand=yes` enables local command execution on connection.
+
+sshgate does not filter SSH options. The human opening the gate is responsible for reviewing any SSH arguments.
 
 ## Troubleshooting
 

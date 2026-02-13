@@ -26,6 +26,8 @@ To run a shell pipeline or operators like `&&`, use the shell mode:
 sshgate run -- "ls && pwd"
 ```
 
+> **Warning:** Shell mode (`run -- "..."`) passes the command through `sh -c` on the remote host. Shell metacharacters are interpreted. Prefer `run COMMAND ARG...` unless you need shell operators. Never construct shell strings from untrusted input.
+
 - Must be run after `open` is active.
 - If there is no active session, `run` exits with a clear error.
 - Exit code is the remote command's exit code.

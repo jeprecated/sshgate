@@ -1,0 +1,32 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+
+## [Unreleased]
+
+### Added
+
+- Symlink detection on runtime and access directories (`ensureSecureDir`).
+- Atomic file writes for session and access state files.
+- Shell mode risk warnings in README and agent skill guide.
+- SSH option risk documentation in README.
+- `SECURITY.md` with vulnerability reporting instructions.
+- `CHANGELOG.md` following Keep a Changelog format.
+- `go vet` and `golangci-lint` steps in CI pipeline.
+- `go mod tidy` check in CI pipeline.
+- `sshgate close` listed in agent-allowed commands.
+
+### Fixed
+
+- `umask 0077` now set in `main()` instead of only in `runOpen`, protecting all file writes.
+- Signal handler now loops to forward repeated signals instead of dropping them.
+- README `run` example corrected to use `--` for shell mode.
+- `go.mod` dependencies marked as direct instead of indirect.
+
+### Security
+
+- Runtime and access directories reject symlinks to prevent symlink attacks.
+- File writes use atomic rename to prevent data corruption on crash.
+- Process-wide umask ensures restrictive permissions on all created files.
