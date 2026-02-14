@@ -1,24 +1,20 @@
 {
-  "$schema":  "https://raw.githubusercontent.com/jetify-com/devbox/0.16.0/.schema/devbox.schema.json",
-  "packages": ["go@latest"],
+  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.16.0/.schema/devbox.schema.json",
+  "packages": [
+    "go@latest",
+    "gopls@latest",
+    "gotools@latest"
+  ],
   "shell": {
-    "init_hook": [
-      "echo 'Welcome to devbox!' > /dev/null"
-    ],
     "scripts": {
-      "fmt": [
-        "gofmt -w ."
+      "fmt": ["gofmt -w ."],
+      "test": ["go test ./..."],
+      "build": ["mkdir -p ./bin", "go build -o ./bin/sshgate"],
+      "install-local": [
+        "mkdir -p \"$HOME/.local/bin\"",
+        "go build -o \"$HOME/.local/bin/sshgate\" ./"
       ],
-      "test": [
-        "go test ./..."
-      ],
-      "build": [
-        "go build -o sshgate"
-      ],
-      "check": [
-        "gofmt -w .",
-        "go test ./..."
-      ]
+      "check": ["gofmt -w .", "go test ./..."]
     }
   }
 }
