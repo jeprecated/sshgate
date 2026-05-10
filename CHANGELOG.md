@@ -17,6 +17,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `go vet` and `golangci-lint` steps in CI pipeline.
 - `go mod tidy` check in CI pipeline.
 - `sshgate close` listed in agent-allowed commands.
+- Public module path (`github.com/ohare93/sshgate`) for `go install` support.
+- Supported-platform documentation for Linux and macOS.
+- Pinned devbox Go package for reproducible local builds.
 
 ### Fixed
 
@@ -24,6 +27,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Signal handler now loops to forward repeated signals instead of dropping them.
 - README `run` example corrected to use `--` for shell mode.
 - `go.mod` dependencies marked as direct instead of indirect.
+- README devbox and quick-start examples updated for repository usage.
+- Devbox package list aligned with the committed lockfile.
+
+### Removed
+
+- Windows/Scoop release targets until Windows support is implemented and tested.
 
 ### Security
 

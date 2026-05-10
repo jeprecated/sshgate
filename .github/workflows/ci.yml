@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -50,7 +50,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -63,15 +63,10 @@ jobs:
           cache-dependency-path: go.sum
 
       - name: Build
-        run: go build -o sshgate${{ matrix.os == 'windows-latest' && '.exe' || '' }}
+        run: go build -o sshgate
 
-      - name: Verify binary runs (Unix)
-        if: matrix.os != 'windows-latest'
+      - name: Verify binary runs
         run: ./sshgate version
-
-      - name: Verify binary runs (Windows)
-        if: matrix.os == 'windows-latest'
-        run: .\sshgate.exe version
 
   lint:
     name: Lint
@@ -87,4 +82,4 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
-          version: latest
+          version: v2.4.0

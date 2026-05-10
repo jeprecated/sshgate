@@ -13,7 +13,6 @@ builds:
     goos:
       - linux
       - darwin
-      - windows
     goarch:
       - amd64
       - arm64
@@ -24,10 +23,6 @@ archives:
   - id: default
     formats:
       - tar.gz
-    format_overrides:
-      - goos: windows
-        formats:
-          - zip
     name_template: >-
       {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}
     files:
@@ -68,12 +63,3 @@ brews:
     test: |
       system "#{bin}/sshgate", "version"
 
-scoops:
-  - name: sshgate
-    repository:
-      owner: ohare93
-      name: scoop
-    directory: bucket
-    homepage: https://github.com/ohare93/sshgate
-    description: Human-gated SSH proxy for agent sessions
-    license: MIT

@@ -8,9 +8,10 @@ bin/
 *.prof
 coverage.out
 
-# Devbox
+# Local tooling state
 .devbox/
 .jj/
+.claude/
 
 # Logs
 *.log

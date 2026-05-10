@@ -16,11 +16,17 @@
 
 The open session holds the terminal and logs each command the agent runs.
 
+## Supported platforms
+
+sshgate currently supports Linux and macOS. Windows builds are not published because sshgate relies on Unix-specific process and OpenSSH control-socket behavior.
+
 ## Install (devbox)
 
+From this repository:
+
 ```sh
-devbox init
-devbox add go
+devbox shell
+devbox run build
 ```
 
 ## Install (Homebrew)
@@ -29,17 +35,16 @@ devbox add go
 brew install ohare93/tap/sshgate
 ```
 
-## Install (Scoop)
+## Install (Go)
 
-```powershell
-scoop bucket add ohare93 https://github.com/ohare93/scoop
-scoop install sshgate
+```sh
+go install github.com/ohare93/sshgate@latest
 ```
 
 ## Build
 
 ```sh
-devbox run -- go build -o sshgate
+devbox run -- go build -o ./bin/sshgate
 ```
 
 ## Quick start
@@ -47,33 +52,33 @@ devbox run -- go build -o sshgate
 Human terminal:
 
 ```sh
-./sshgate init
-./sshgate open user@host
+sshgate init
+sshgate open user@host
 ```
 
 To pass SSH options (keys, identities, ports), use `--`:
 
 ```sh
-./sshgate open -- -i ~/.ssh/key -o IdentitiesOnly=yes user@host
+sshgate open -- -i ~/.ssh/key -o IdentitiesOnly=yes user@host
 ```
 
 You can also pass SSH options directly before the target:
 
 ```sh
-./sshgate open -i ~/.ssh/key -o IdentitiesOnly=yes user@host
+sshgate open -i ~/.ssh/key -o IdentitiesOnly=yes user@host
 ```
 
 Agent terminal:
 
 ```sh
-./sshgate status
-./sshgate run uname -a
+sshgate status
+sshgate run uname -a
 ```
 
 Human terminal (when done):
 
 ```sh
-./sshgate close
+sshgate close
 ```
 
 ## Agent usage
