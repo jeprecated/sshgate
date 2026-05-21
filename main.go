@@ -601,7 +601,8 @@ func tailCommandLog(path string, stop <-chan struct{}) {
 }
 
 func runRemoteShell(state sessionState, commandLine string) error {
-	sshArgs := []string{"-S", state.SocketPath, state.Host, "--", "sh", "-c", commandLine}
+	remoteCommand := shellJoin([]string{"sh", "-c", commandLine})
+	sshArgs := []string{"-S", state.SocketPath, state.Host, "--", remoteCommand}
 	cmd := sshCommand(sshArgs...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout

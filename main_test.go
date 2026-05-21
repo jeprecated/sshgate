@@ -434,8 +434,71 @@ func TestRunRemoteShellUsesSSHBinary(t *testing.T) {
 	if !strings.Contains(output, "user@host") {
 		t.Fatalf("expected host in output, got: %q", output)
 	}
-	if !strings.Contains(output, "sh -c echo ok") {
-		t.Fatalf("expected shell command in output, got: %q", output)
+	if !strings.Contains(output, "'sh' '-c' 'echo ok'") {
+		t.Fatalf("expected quoted shell command in output, got: %q", output)
+	}
+}
+
+func TestRunRemoteShellPreservesCommandStringAfterOpenSSHJoin(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("shell script not available on Windows")
+	}
+	fakeDir := t.TempDir()
+	sshPath := filepath.Join(fakeDir, "ssh")
+	script := "#!/bin/sh\n" +
+		"remote=\n" +
+		"collect=0\n" +
+		"for arg do\n" +
+		"  if [ \"$collect\" = \"1\" ]; then\n" +
+		"    if [ -z \"$remote\" ]; then\n" +
+		"      remote=$arg\n" +
+		"    else\n" +
+		"      remote=\"$remote $arg\"\n" +
+		"    fi\n" +
+		"    continue\n" +
+		"  fi\n" +
+		"  if [ \"$arg\" = \"--\" ]; then\n" +
+		"    collect=1\n" +
+		"  fi\n" +
+		"done\n" +
+		"if [ -z \"$remote\" ]; then\n" +
+		"  echo missing remote command >&2\n" +
+		"  exit 64\n" +
+		"fi\n" +
+		"sh -c \"$remote\"\n"
+	if err := os.WriteFile(sshPath, []byte(script), 0o700); err != nil {
+		t.Fatalf("write fake ssh: %v", err)
+	}
+
+	oldSSH := sshBinary
+	sshBinary = sshPath
+	defer func() { sshBinary = oldSSH }()
+
+	readPipe, writePipe, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("pipe: %v", err)
+	}
+	oldStdout := os.Stdout
+	os.Stdout = writePipe
+	defer func() {
+		os.Stdout = oldStdout
+		_ = writePipe.Close()
+		_ = readPipe.Close()
+	}()
+
+	state := sessionState{Host: "user@host", SocketPath: "/tmp/socket", LogPath: "/tmp/log"}
+	if err := runRemoteShell(state, "echo hi"); err != nil {
+		t.Fatalf("runRemoteShell error: %v", err)
+	}
+
+	_ = writePipe.Close()
+	data, err := io.ReadAll(readPipe)
+	if err != nil {
+		t.Fatalf("read output: %v", err)
+	}
+
+	if got := strings.TrimSpace(string(data)); got != "hi" {
+		t.Fatalf("remote shell output = %q, want hi", got)
 	}
 }
 
