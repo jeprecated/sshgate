@@ -17,7 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `go vet` and `golangci-lint` steps in CI pipeline.
 - `go mod tidy` check in CI pipeline.
 - `sshgate close` listed in agent-allowed commands.
-- Public module path (`github.com/ohare93/sshgate`) for `go install` support.
+- Public module path (`github.com/jeprecated/sshgate`) for `go install` support.
 - Supported-platform documentation for Linux and macOS.
 - Pinned devbox Go package for reproducible local builds.
 

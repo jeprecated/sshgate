@@ -44,7 +44,7 @@ changelog:
 
 release:
   github:
-    owner: ohare93
+    owner: jeprecated
     name: sshgate
   draft: true
   prerelease: auto
@@ -52,10 +52,10 @@ release:
 brews:
   - name: sshgate
     repository:
-      owner: ohare93
+      owner: jeprecated
       name: tap
     directory: Formula
-    homepage: https://github.com/ohare93/sshgate
+    homepage: https://github.com/jeprecated/sshgate
     description: Human-gated SSH proxy for agent sessions
     license: MIT
     install: |

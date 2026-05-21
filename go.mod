@@ -1,4 +1,4 @@
-module github.com/ohare93/sshgate
+module github.com/jeprecated/sshgate
 
 go 1.25.5
 

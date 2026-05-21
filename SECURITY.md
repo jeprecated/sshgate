@@ -13,7 +13,7 @@ Only the latest release is supported with security updates.
 
 Please report security vulnerabilities through GitHub Security Advisories:
 
-https://github.com/ohare93/sshgate/security/advisories
+https://github.com/jeprecated/sshgate/security/advisories
 
 ### Scope
 

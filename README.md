@@ -32,13 +32,13 @@ devbox run build
 ## Install (Homebrew)
 
 ```sh
-brew install ohare93/tap/sshgate
+brew install jeprecated/tap/sshgate
 ```
 
 ## Install (Go)
 
 ```sh
-go install github.com/ohare93/sshgate@latest
+go install github.com/jeprecated/sshgate@latest
 ```
 
 ## Build
