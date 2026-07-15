@@ -9,7 +9,7 @@ bin/
 coverage.out
 
 # Local tooling state
-.devbox/
+.devenv/
 .jj/
 .claude/
 

@@ -20,13 +20,13 @@ The open session holds the terminal and logs each command the agent runs.
 
 sshgate currently supports Linux and macOS. Windows builds are not published because sshgate relies on Unix-specific process and OpenSSH control-socket behavior.
 
-## Install (devbox)
+## Install (Devenv)
 
 From this repository:
 
 ```sh
-devbox shell
-devbox run build
+devenv shell
+devenv shell build
 ```
 
 ## Install (Homebrew)
@@ -44,7 +44,7 @@ go install github.com/jeprecated/sshgate@latest
 ## Build
 
 ```sh
-devbox run -- go build -o ./bin/sshgate
+devenv shell build
 ```
 
 ## Quick start
