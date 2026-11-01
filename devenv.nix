@@ -1,7 +1,7 @@
 { pkgs, ... }:
 
 {
-  packages = [ pkgs.go_1_25 ];
+  packages = [ pkgs.go_1_26 ];
 
   scripts = {
     fmt.exec = "gofmt -w .";

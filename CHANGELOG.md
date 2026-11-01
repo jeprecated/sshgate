@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Security
+
+- `golang.org/x/crypto` 0.47.0 → 0.58.0 (GO-2026-5005, -5006, -5017, -5019, -5020, -5021, -5023, -6354, -6355: SSH agent constraints, knownhosts `@revoked` bypass, FIDO touch bypass, `VerifiedPublicKeyCallback` permissions, SSH server deadlocks and DoS). This needs Go 1.26, so the minimum Go version, Devenv and CI move to Go 1.26.
+
 ### Added
 
 - Symlink detection on runtime and access directories (`ensureSecureDir`).
